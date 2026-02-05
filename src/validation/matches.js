@@ -18,44 +18,50 @@ export const matchIdParamSchema = z.object({
 });
 
 // Schema for creating a match
-export const createMatchSchema = z.object({
-  sport: z.string().min(1, 'Sport is required'),
-  homeTeam: z.string().min(1, 'Home team is required'),
-  awayTeam: z.string().min(1, 'Away team is required'),
-  startTime: z.string(),
-  endTime: z.string(),
-  homeScore: z.coerce.number().int().nonnegative().optional(),
-  awayScore: z.coerce.number().int().nonnegative().optional(),
-}).superRefine((data, ctx) => {
-  // Validate ISO date strings
-  const startDate = new Date(data.startTime);
-  const endDate = new Date(data.endTime);
+export const createMatchSchema = z
+  .object({
+    sport: z.string().min(1, "Sport is required"),
+    homeTeam: z.string().min(1, "Home team is required"),
+    awayTeam: z.string().min(1, "Away team is required"),
+    startTime: z.string(),
+    endTime: z.string(),
+    homeScore: z.coerce.number().int().nonnegative().optional(),
+    awayScore: z.coerce.number().int().nonnegative().optional(),
+  })
+  .superRefine((data, ctx) => {
+    // Validate ISO date strings
+    const startDate = new Date(data.startTime);
+    const endDate = new Date(data.endTime);
 
-  if (isNaN(startDate.getTime())) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'startTime must be a valid ISO date string',
-      path: ['startTime'],
-    });
-  }
+    const startValid = !isNaN(startDate.getTime());
+    const endValid = !isNaN(endDate.getTime());
 
-  if (isNaN(endDate.getTime())) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'endTime must be a valid ISO date string',
-      path: ['endTime'],
-    });
-  }
+    if (!startValid) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "startTime must be a valid ISO date string",
+        path: ["startTime"],
+      });
+    }
 
-  // Ensure endTime is after startTime
-  if (startDate >= endDate) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'endTime must be after startTime',
-      path: ['endTime'],
-    });
-  }
-});
+    if (!endValid) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "endTime must be a valid ISO date string",
+        path: ["endTime"],
+      });
+    }
+
+    // Ensure endTime is after startTime (only if both are valid)
+    if (startValid && endValid && startDate >= endDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "endTime must be after startTime",
+        path: ["endTime"],
+      });
+    }
+  });
+
 
 // Schema for updating scores
 export const updateScoreSchema = z.object({
