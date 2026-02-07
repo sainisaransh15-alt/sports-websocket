@@ -34,5 +34,6 @@ server.listen(PORT, HOST, () => {
     HOST === "0.0.0.0" ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
 
   console.log(`Server is running at ${baseUrl}`);
-  console.log(`WebSocket endpoint: ws://localhost:${PORT}/ws`);
+const wsHost = HOST === "0.0.0.0" ? "localhost" : HOST;
+console.log(`WebSocket endpoint: ws://${wsHost}:${PORT}/ws`);
 });
