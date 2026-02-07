@@ -1,12 +1,14 @@
 import { Router } from "express";
+import { desc } from "drizzle-orm";
+
 import {
   createMatchSchema,
   listMatchesQuerySchema,
 } from "../validation/matches.js";
+
 import { db } from "../db/db.js";
 import { matches } from "../db/schema.js";
 import { getMatchStatus } from "../utils/match-status.js";
-import { desc } from "drizzle-orm";
 
 /**
  * Router handling match-related endpoints.
@@ -40,8 +42,8 @@ matchrouter.get("/", async (req, res) => {
 
     return res.json({ data });
   } catch (error) {
-    console.error("GET /matches failed:", error); // ✅ log server-side
-    return res.status(500).json({ error: "failed to list" }); // ✅ no details
+    console.error("GET /matches failed:", error);
+    return res.status(500).json({ error: "failed to list" });
   }
 });
 
@@ -56,7 +58,7 @@ matchrouter.post("/", async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({
       error: "Invalid payload.",
-      details: parsed.error.errors, // ✅ this is validation info, safe to return
+      details: parsed.error.errors,
     });
   }
 
@@ -75,9 +77,15 @@ matchrouter.post("/", async (req, res) => {
       })
       .returning();
 
+    // ✅ Broadcast via app.locals (because we set it in src/index.js)
+    const broadcastMatchCreated = req.app.locals.broadcastMatchCreated;
+    if (broadcastMatchCreated) {
+      broadcastMatchCreated(event);
+    }
+
     return res.status(201).json({ data: event });
   } catch (error) {
-    console.error("POST /matches failed:", error); // ✅ log server-side
-    return res.status(500).json({ error: "Failed to create match." }); // ✅ no details
+    console.error("POST /matches failed:", error);
+    return res.status(500).json({ error: "Failed to create match." });
   }
 });
