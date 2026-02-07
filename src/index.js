@@ -4,6 +4,7 @@ import http from "http";
 
 import { matchrouter } from "./routes/matches.js";
 import { attachwebsocket } from "./ws/server.js";
+import { securitymiddleware } from "./arcjet.js";
 
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || "0.0.0.0";
@@ -18,6 +19,9 @@ app.get("/", (req, res) => {
   res.send("Hello World");
 });
 
+// apply Arcjet to HTTP routes
+app.use(securitymiddleware());
+
 // routes
 app.use("/matches", matchrouter);
 
@@ -30,5 +34,5 @@ server.listen(PORT, HOST, () => {
     HOST === "0.0.0.0" ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
 
   console.log(`Server is running at ${baseUrl}`);
-  console.log(`WebSocket endpoint: ws://${HOST}:${PORT}/ws`);
+  console.log(`WebSocket endpoint: ws://localhost:${PORT}/ws`);
 });
