@@ -65,6 +65,9 @@ matchrouter.post("/", async (req, res) => {
   const { startTime, endTime, homeScore, awayScore } = parsed.data;
 
   try {
+    // ✅ Ensure status is always valid for DB enum
+    const status = getMatchStatus(startTime, endTime) ?? "scheduled";
+
     const [event] = await db
       .insert(matches)
       .values({
@@ -73,11 +76,11 @@ matchrouter.post("/", async (req, res) => {
         endTime: new Date(endTime),
         homeScore: homeScore ?? 0,
         awayScore: awayScore ?? 0,
-        status: getMatchStatus(startTime, endTime),
+        status,
       })
       .returning();
 
-    // ✅ Broadcast via app.locals (because we set it in src/index.js)
+    // ✅ Broadcast via app.locals
     const broadcastMatchCreated = req.app.locals.broadcastMatchCreated;
     if (broadcastMatchCreated) {
       broadcastMatchCreated(event);
@@ -86,6 +89,9 @@ matchrouter.post("/", async (req, res) => {
     return res.status(201).json({ data: event });
   } catch (error) {
     console.error("POST /matches failed:", error);
-    return res.status(500).json({ error: "Failed to create match." });
+    return res.status(500).json({
+      error: "Failed to create match.",
+      details: error?.message ?? String(error),
+    });
   }
 });
