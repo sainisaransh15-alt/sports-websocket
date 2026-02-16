@@ -1,5 +1,8 @@
 import arcjet, { detectBot, shield, slidingWindow } from "@arcjet/node";
 
+/**
+ * Environment setup
+ */
 const arcjetKey = process.env.ARCJET_KEY;
 const arcjetMode =
   process.env.ARCJET_MODE === "DRY_RUN" ? "DRY_RUN" : "LIVE";
@@ -9,10 +12,11 @@ if (!arcjetKey) {
 }
 
 /**
- * HTTP protection
+ * ----------------------------------------
+ * HTTP Protection (Express routes)
+ * ----------------------------------------
  */
-export const httpArcjet = arcjetKey ?
-arcjet({
+export const httpArcjet = arcjet({
   key: arcjetKey,
   rules: [
     shield({ mode: arcjetMode }),
@@ -26,13 +30,14 @@ arcjet({
       max: 50,
     }),
   ],
-}) : null;
+});
 
 /**
- * WebSocket protection
+ * ----------------------------------------
+ * WebSocket Protection
+ * ----------------------------------------
  */
-export const wsArcjet = arcjetKey ?
-arcjet({
+export const wsArcjet = arcjet({
   key: arcjetKey,
   rules: [
     shield({ mode: arcjetMode }),
@@ -46,10 +51,12 @@ arcjet({
       max: 5,
     }),
   ],
-}) : null;
+});
 
 /**
- * Express middleware
+ * ----------------------------------------
+ * Express Middleware
+ * ----------------------------------------
  */
 export function securitymiddleware() {
   return async (req, res, next) => {
@@ -60,7 +67,6 @@ export function securitymiddleware() {
         if (decision.reason.isRateLimit()) {
           return res.status(429).json({ error: "Too many requests" });
         }
-
         return res.status(403).json({ error: "Forbidden" });
       }
 
